@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 
-"""Main module."""
+'''Main module.'''
 
 import attr
 import requests
 
+_base_url = 'https://api.exoscale.ch/dns/v1/domains'
+
+
 @attr.s(slots=True, frozen=True)
 class access_key(object):
+    ''' `access_key` is the entrypoint to this API. '''
+
     api_key = attr.ib()
     secret = attr.ib(repr=False)
 
     def __iter__(self):
-        ''' List all domains. '''
+        '''List all domains.'''
         response = requests.get(
-            f'https://api.exoscale.ch/dns/v1/domains',
-            headers = {
+            f'{_base_url}',
+            headers={
                 'X-DNS-Token': f'{self.api_key}:{self.secret}',
                 'Accept': 'application/json'
             }
@@ -26,12 +31,12 @@ class access_key(object):
     def create(self, name):
         ''' Create a domain. '''
         response = requests.post(
-            f'https://api.exoscale.ch/dns/v1/domains',
-            headers = {
+            f'{_base_url}',
+            headers={
                 'X-DNS-Token': f'{self.api_key}:{self.secret}',
                 'Accept': 'application/json'
             },
-            json = {
+            json={
                 'domain': {'name': name}
             }
         ).json()
@@ -62,8 +67,8 @@ class domain(object):
     def __iter__(self):
         ''' List all records. '''
         response = requests.get(
-            f'https://api.exoscale.ch/dns/v1/domains/{self.name}/records',
-            headers = {
+            f'{_base_url}/{self.name}/records',
+            headers={
                 'X-DNS-Domain-Token': self.token,
                 'Accept': 'application/json'
             }
@@ -81,15 +86,17 @@ class domain(object):
                 'content': content
             }
         }
-        if ttl: data['record']['ttl'] = ttl
-        if prio: data['record']['prio'] = prio
+        if ttl:
+            data['record']['ttl'] = ttl
+        if prio:
+            data['record']['prio'] = prio
         response = requests.post(
-            f'https://api.exoscale.ch/dns/v1/domains/{self.name}/records',
-            headers = {
+            f'{_base_url}/{self.name}/records',
+            headers={
                 'X-DNS-Domain-Token': self.token,
                 'Accept': 'application/json'
             },
-            json = data
+            json=data
         ).json()
         record_details = response.get('record', None)
         if not record_details:
@@ -99,9 +106,10 @@ class domain(object):
     def delete(self):
         ''' Delete this domain. '''
         response = requests.delete(
-            f'https://api.exoscale.ch/dns/v1/domains/{self.name}',
-            headers = {
-                'X-DNS-Token': f'{self._access_key.api_key}:{self._access_key.secret}',
+            f'{_base_url}/{self.name}',
+            headers={
+                'X-DNS-Token':
+                    f'{self._access_key.api_key}:{self._access_key.secret}',
                 'Accept': 'application/json'
             }
         ).json()
@@ -112,8 +120,8 @@ class domain(object):
     def zone(self):
         ''' Fetch zone file for this domain. '''
         response = requests.get(
-            f'https://api.exoscale.ch/dns/v1/domains/{self.name}/zone',
-            headers = {
+            f'{_base_url}/{self.name}/zone',
+            headers={
                 'X-DNS-Domain-Token': self.token,
                 'Accept': 'application/json'
             }
@@ -122,6 +130,7 @@ class domain(object):
         if not zone:
             raise Exception(str(response))
         return zone
+
 
 @attr.s(slots=True, frozen=True)
 class record(object):
@@ -140,17 +149,21 @@ class record(object):
 
     def update(self, name=None, content=None, ttl=None, prio=None):
         data = {}
-        if name: data['name'] = name
-        if content: data['content'] = content
-        if ttl: data['ttl'] = ttl
-        if prio: data['prio'] = prio
+        if name:
+            data['name'] = name
+        if content:
+            data['content'] = content
+        if ttl:
+            data['ttl'] = ttl
+        if prio:
+            data['prio'] = prio
         response = requests.put(
-            f'https://api.exoscale.ch/dns/v1/domains/{self._domain.name}/records/{self.id}',
-            headers = {
+            f'{_base_url}/{self._domain.name}/records/{self.id}',
+            headers={
                 'X-DNS-Domain-Token': self._domain.token,
                 'Accept': 'application/json'
             },
-            json = data
+            json=data
         ).json()
         record_details = response.get('record', None)
         if not record_details:
@@ -159,8 +172,8 @@ class record(object):
 
     def delete(self):
         response = requests.delete(
-            f'https://api.exoscale.ch/dns/v1/domains/{self._domain.name}/records/{self.id}',
-            headers = {
+            f'{_base_url}/{self._domain.name}/records/{self.id}',
+            headers={
                 'X-DNS-Domain-Token': self._domain.token,
                 'Accept': 'application/json'
             }

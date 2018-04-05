@@ -9,3 +9,9 @@ __version__ = '0.1.2'
 from .exoscale_dns import access_key
 from .exoscale_dns import domain
 from .exoscale_dns import record
+
+__all__ = [
+    'access_key',
+    'domain',
+    'record'
+]
