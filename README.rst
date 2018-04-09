@@ -14,6 +14,10 @@ Python API for Exoscale's DNS offering
         :alt: Documentation Status
 
 
+.. image:: https://snyk.io/test/github/digitalmensch/exoscale_dns/badge.svg
+     :target: https://snyk.io/test/github/digitalmensch/exoscale_dns
+     :alt: Snyk
+
 .. image:: https://pyup.io/repos/github/digitalmensch/exoscale_dns/shield.svg
      :target: https://pyup.io/repos/github/digitalmensch/exoscale_dns/
      :alt: Updates
