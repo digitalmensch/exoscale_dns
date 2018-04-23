@@ -1,46 +1,44 @@
 # -*- coding: utf-8 -*-
 
-'''Main module.'''
+"""Main module."""
 
 import attr
 import requests
 
-_base_url = 'https://api.exoscale.ch/dns/v1/domains'
+_base_url = "https://api.exoscale.ch/dns/v1/domains"
 
 
 @attr.s(slots=True, frozen=True)
 class access_key(object):
-    ''' `access_key` is the entrypoint to this API. '''
+    """ `access_key` is the entrypoint to this API. """
 
     api_key = attr.ib()
     secret = attr.ib(repr=False)
 
     def __iter__(self):
-        '''List all domains.'''
+        """List all domains."""
         response = requests.get(
-            f'{_base_url}',
+            f"{_base_url}",
             headers={
-                'X-DNS-Token': f'{self.api_key}:{self.secret}',
-                'Accept': 'application/json'
-            }
+                "X-DNS-Token": f"{self.api_key}:{self.secret}",
+                "Accept": "application/json",
+            },
         ).json()
         for domain_details in response:
-            domain_details = domain_details['domain']
+            domain_details = domain_details["domain"]
             yield domain(self, **domain_details)
 
     def create(self, name):
-        ''' Create a domain. '''
+        """ Create a domain. """
         response = requests.post(
-            f'{_base_url}',
+            f"{_base_url}",
             headers={
-                'X-DNS-Token': f'{self.api_key}:{self.secret}',
-                'Accept': 'application/json'
+                "X-DNS-Token": f"{self.api_key}:{self.secret}",
+                "Accept": "application/json",
             },
-            json={
-                'domain': {'name': name}
-            }
+            json={"domain": {"name": name}},
         ).json()
-        domain_details = response['domain']
+        domain_details = response["domain"]
         return domain(self, **domain_details)
 
 
@@ -65,70 +63,59 @@ class domain(object):
     updated_at = attr.ib()
 
     def __iter__(self):
-        ''' List all records. '''
+        """ List all records. """
         response = requests.get(
-            f'{_base_url}/{self.name}/records',
-            headers={
-                'X-DNS-Domain-Token': self.token,
-                'Accept': 'application/json'
-            }
+            f"{_base_url}/{self.name}/records",
+            headers={"X-DNS-Domain-Token": self.token, "Accept": "application/json"},
         ).json()
         for record_details in response:
-            record_details = record_details['record']
+            record_details = record_details["record"]
             yield record(self, **record_details)
 
     def add_record(self, name, record_type, content, ttl=None, prio=None):
-        ''' Add a new record. '''
+        """ Add a new record. """
         data = {
-            'record': {
-                'name': name,
-                'record_type': record_type,
-                'content': content
-            }
+            "record": {"name": name, "record_type": record_type, "content": content}
         }
         if ttl:
-            data['record']['ttl'] = ttl
+            data["record"]["ttl"] = ttl
         if prio:
-            data['record']['prio'] = prio
+            data["record"]["prio"] = prio
         response = requests.post(
-            f'{_base_url}/{self.name}/records',
-            headers={
-                'X-DNS-Domain-Token': self.token,
-                'Accept': 'application/json'
-            },
-            json=data
+            f"{_base_url}/{self.name}/records",
+            headers={"X-DNS-Domain-Token": self.token, "Accept": "application/json"},
+            json=data,
         ).json()
-        record_details = response.get('record', None)
+        record_details = response.get("record", None)
         if not record_details:
             raise Exception(str(response))
+
         return record(self, **record_details)
 
     def delete(self):
-        ''' Delete this domain. '''
+        """ Delete this domain. """
         response = requests.delete(
-            f'{_base_url}/{self.name}',
+            f"{_base_url}/{self.name}",
             headers={
-                'X-DNS-Token':
-                    f'{self._access_key.api_key}:{self._access_key.secret}',
-                'Accept': 'application/json'
-            }
+                "X-DNS-Token": f"{self._access_key.api_key}:{self._access_key.secret}",
+                "Accept": "application/json",
+            },
         ).json()
         if response != {}:
             raise Exception(str(response))
+
         return None
 
     def zone(self):
-        ''' Fetch zone file for this domain. '''
+        """ Fetch zone file for this domain. """
         response = requests.get(
-            f'{_base_url}/{self.name}/zone',
-            headers={
-                'X-DNS-Domain-Token': self.token,
-                'Accept': 'application/json'
-            }
+            f"{_base_url}/{self.name}/zone",
+            headers={"X-DNS-Domain-Token": self.token, "Accept": "application/json"},
         ).json()
-        zone = response.get('zone', None)
+        zone = response.get("zone", None)
         if not zone:
             raise Exception(str(response))
+
         return zone
 
 
@@ -150,34 +137,34 @@ class record(object):
     def update(self, name=None, content=None, ttl=None, prio=None):
         data = {}
         if name:
-            data['name'] = name
+            data["name"] = name
         if content:
-            data['content'] = content
+            data["content"] = content
         if ttl:
-            data['ttl'] = ttl
+            data["ttl"] = ttl
         if prio:
-            data['prio'] = prio
+            data["prio"] = prio
         response = requests.put(
-            f'{_base_url}/{self._domain.name}/records/{self.id}',
+            f"{_base_url}/{self._domain.name}/records/{self.id}",
             headers={
-                'X-DNS-Domain-Token': self._domain.token,
-                'Accept': 'application/json'
+                "X-DNS-Domain-Token": self._domain.token, "Accept": "application/json"
             },
-            json=data
+            json=data,
         ).json()
-        record_details = response.get('record', None)
+        record_details = response.get("record", None)
         if not record_details:
             raise Exception(str(response))
+
         return record(self._domain, **record_details)
 
     def delete(self):
         response = requests.delete(
-            f'{_base_url}/{self._domain.name}/records/{self.id}',
+            f"{_base_url}/{self._domain.name}/records/{self.id}",
             headers={
-                'X-DNS-Domain-Token': self._domain.token,
-                'Accept': 'application/json'
-            }
+                "X-DNS-Domain-Token": self._domain.token, "Accept": "application/json"
+            },
         ).json()
         if response != {}:
             raise Exception(str(response))
+
         return None

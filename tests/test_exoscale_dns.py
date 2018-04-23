@@ -13,27 +13,29 @@ import time
 # Fixtures
 ###############################################################################
 
+
 @pytest.fixture
 def access_key():
     return exoscale_dns.access_key(
-        os.environ.get('APIKEY', 'invalid'),
-        os.environ.get('SECRET', 'invalid')
+        os.environ.get("APIKEY", "invalid"), os.environ.get("SECRET", "invalid")
     )
 
 
 @pytest.fixture
 def test_domain(access_key):
     for domain in access_key:
-        if domain.name == os.environ.get('DOMAIN', 'invalid'):
+        if domain.name == os.environ.get("DOMAIN", "invalid"):
             yield domain
             break
+
             try:
                 domain.delete()
             except Exception:
                 pass
     else:
-        domain = access_key.create(os.environ.get('DOMAIN', 'invalid'))
+        domain = access_key.create(os.environ.get("DOMAIN", "invalid"))
         yield domain
+
         try:
             domain.delete()
         except Exception:
@@ -43,14 +45,16 @@ def test_domain(access_key):
 @pytest.fixture
 def test_record(test_domain):
     for record in test_domain:
-        if record.name.startswith('test'):
+        if record.name.startswith("test"):
             return record
-    return test_domain.add_record(f'test{int(time.time())}', 'TXT', 'test')
+
+    return test_domain.add_record(f"test{int(time.time())}", "TXT", "test")
 
 
 ###############################################################################
 # Tests for `access_key`
 ###############################################################################
+
 
 def test_create_access_key(access_key):
     assert access_key is not None
@@ -64,6 +68,7 @@ def test_list_all_domains(access_key):
 ###############################################################################
 # Tests for `domain`
 ###############################################################################
+
 
 def test_create_test_domain(test_domain):
     assert test_domain is not None
@@ -91,13 +96,14 @@ def test_delete_domain(test_domain, access_key):
 # Tests for `record`
 ###############################################################################
 
+
 def test_add_record(test_domain):
-    record = test_domain.add_record(f'test{int(time.time())}', 'TXT', 'test')
+    record = test_domain.add_record(f"test{int(time.time())}", "TXT", "test")
     assert isinstance(record, exoscale_dns.record)
 
 
 def test_update_record(test_record):
-    record2 = test_record.update(content=f'{time.time()}')
+    record2 = test_record.update(content=f"{time.time()}")
     assert test_record.content != record2.content
     assert test_record.id == record2.id
 
