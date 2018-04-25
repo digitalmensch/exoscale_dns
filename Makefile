@@ -85,3 +85,7 @@ dist: clean ## builds source and wheel package
 
 install: clean ## install the package to the active Python's site-packages
 	python setup.py install
+
+pipfile: ## install dependencies from requirements(_dev).txt (run outside venv)
+	pipenv install -r requirements.txt
+	pipenv install --dev -r requirements_dev.txt
