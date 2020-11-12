@@ -1,2 +1,2 @@
 attrs==18.2.0
-requests==2.19.1
+requests==2.25.0
